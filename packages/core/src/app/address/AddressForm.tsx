@@ -1,3 +1,18 @@
+// Arriba del archivo o en un types.ts
+type CPInfo = {
+  estado: string;
+  municipio: string;
+  colonias: string[];
+};
+
+type CPData = {
+  [cp: string]: CPInfo;
+};
+
+// Importa y dale tipado
+import cpDataJson from '../../bd_cp_mx.json';
+const cpData = cpDataJson as CPData;
+
 import { Address, Country, FormField } from '@bigcommerce/checkout-sdk';
 import { memoize } from '@bigcommerce/memoize';
 import { forIn, noop } from 'lodash';
@@ -10,10 +25,7 @@ import { AutocompleteItem } from '../ui/autocomplete';
 import { CheckboxFormField, DynamicFormField, DynamicFormFieldType, Fieldset } from '../ui/form';
 
 import { AddressKeyMap } from './address';
-import {
-    getAddressFormFieldInputId,
-    getAddressFormFieldLegacyName,
-} from './getAddressFormFieldInputId';
+import { getAddressFormFieldInputId, getAddressFormFieldLegacyName } from './getAddressFormFieldInputId';
 import { GoogleAutocompleteFormField, mapToAddress } from './googleAutocomplete';
 import './AddressForm.scss';
 
@@ -73,10 +85,24 @@ class AddressForm extends Component<AddressFormProps & WithLanguageProps> {
     private nextElement?: HTMLElement | null;
     static contextType = StyleContext;
     declare context: React.ContextType<typeof StyleContext>;
+    //---------------------------------------------------- CODIGO MODIFICADO --------------------------------------------------------------------------------
+    state = {
+        colonias: [] as string[],
+        coloniaSeleccionada: '',
+        postalCodeValue: '',
+    };
+    //-------------------------------------------------------------------------------------------------------------------------------------------------------
 
     private handleDynamicFormFieldChange: (name: string) => (value: string | string[]) => void =
         memoize((name) => (value) => {
             this.syncNonFormikValue(name, value);
+
+            //---------------------------------------------------- CODIGO MODIFICADO --------------------------------------------------------------------------------
+            if (name === 'postalCode' && typeof value === 'string' && value.length === 5) {
+                this.buscarColonias(value);
+                this.setState({ postalCodeValue: value });
+            }
+            //-------------------------------------------------------------------------------------------------------------------------------------------------------
         });
 
     componentDidMount(): void {
@@ -86,6 +112,33 @@ class AddressForm extends Component<AddressFormProps & WithLanguageProps> {
             this.nextElement = current.querySelector<HTMLElement>('[autocomplete="address-line2"]');
         }
     }
+
+
+    //---------------------------------------------------- CODIGO MODIFICADO --------------------------------------------------------------------------------
+    private buscarColonias = (cp: string) => {
+    const data = cpData[cp];
+    if (data) {
+        this.setState({
+            colonias: data.colonias || [],
+            municipio: data.municipio || '',
+            estado: data.estado || '',
+        });
+
+        // Rellena los campos del formulario nativos de BC
+        if (this.props.setFieldValue) {
+            this.props.setFieldValue('city', data.municipio || '');
+            this.props.setFieldValue('stateOrProvince', data.estado || '');
+        }
+        if (this.props.onChange) {
+            this.props.onChange('city', data.municipio || '');
+            this.props.onChange('stateOrProvince', data.estado || '');
+        }
+    } else {
+        this.setState({ colonias: [], municipio: '', estado: '' });
+    }
+};
+
+    //-------------------------------------------------------------------------------------------------------------------------------------------------------
 
     render(): ReactNode {
         const {
@@ -139,37 +192,72 @@ class AddressForm extends Component<AddressFormProps & WithLanguageProps> {
                             }
 
                             return (
-                                <DynamicFormField
-                                    autocomplete={AUTOCOMPLETE[field.name]}
-                                    extraClass={`dynamic-form-field--${getAddressFormFieldLegacyName(
-                                        addressFieldName,
-                                    )}`}
-                                    field={field}
-                                    inputId={getAddressFormFieldInputId(addressFieldName)}
-                                    // stateOrProvince can sometimes be a dropdown or input, so relying on id is not sufficient
-                                    isFloatingLabelEnabled={isFloatingLabelEnabled}
-                                    key={`${field.id}-${field.name}`}
-                                    label={
-                                        field.custom ? (
-                                            field.label
-                                        ) : (
-                                            <TranslatedString id={LABEL[field.name]} />
-                                        )
-                                    }
-                                    newFontStyle={newFontStyle}
-                                    onChange={this.handleDynamicFormFieldChange(addressFieldName)}
-                                    parentFieldName={
-                                        field.custom
-                                            ? fieldName
-                                                ? `${fieldName}.customFields`
-                                                : 'customFields'
-                                            : fieldName
-                                    }
-                                    placeholder={this.getPlaceholderValue(
-                                        field,
-                                        translatedPlaceholderId,
+                                <React.Fragment key={field.id}>
+                                    <DynamicFormField
+                                        autocomplete={AUTOCOMPLETE[field.name]}
+                                        extraClass={`dynamic-form-field--${getAddressFormFieldLegacyName(
+                                            addressFieldName,
+                                        )}`}
+                                        field={field}
+                                        inputId={getAddressFormFieldInputId(addressFieldName)}
+                                        // stateOrProvince can sometimes be a dropdown or input, so relying on id is not sufficient
+                                        isFloatingLabelEnabled={isFloatingLabelEnabled}
+                                        key={`${field.id}-${field.name}`}
+                                        label={
+                                            field.custom ? (
+                                                field.label
+                                            ) : (
+                                                <TranslatedString id={LABEL[field.name]} />
+                                            )
+                                        }
+                                        newFontStyle={newFontStyle}
+                                        onChange={this.handleDynamicFormFieldChange(addressFieldName)}
+                                        parentFieldName={
+                                            field.custom
+                                                ? fieldName
+                                                    ? `${fieldName}.customFields`
+                                                    : 'customFields'
+                                                : fieldName
+                                        }
+                                        placeholder={this.getPlaceholderValue(
+                                            field,
+                                            translatedPlaceholderId,
+                                        )}
+                                    />
+
+                                    {/*Este codigo es para agregar el selec con las colonias */}
+                                    {addressFieldName === 'postalCode' && (
+                                        <div className="dynamic-form-field floating-form-field dynamic-form-field--company-field">
+                                            <div className="form-field" style={{margin: '0 0 0.75rem'}}>
+                                                <select
+                                                    id="colonia"
+                                                    className="form-input optimizedCheckout-form-input floating-form-field-input floating-input"
+                                                    value={this.state.coloniaSeleccionada}
+                                                    onChange={e => {
+                                                        this.setState({ coloniaSeleccionada: e.target.value });
+                                                        if (this.props.setFieldValue) {
+                                                            this.props.setFieldValue('address2', e.target.value);
+                                                        }
+                                                        if (this.props.onChange) {
+                                                            this.props.onChange('address2', e.target.value);
+                                                        }
+                                                    }}
+                                                    required
+                                                >
+                                                    <option value="">Selecciona una colonia</option>
+                                                    {this.state.colonias.map((colonia, idx) => (
+                                                        <option key={idx} value={colonia}>{colonia}</option>
+                                                    ))}
+                                                </select>
+                                                <label className="floating-label form-label optimizedCheckout-form-label floating-form-field-label-label" 
+                                                    htmlFor="colonia">
+                                                    Colonia
+                                                    {/* <span className="is-required">*</span> */}
+                                                </label>
+                                            </div>
+                                        </div>
                                     )}
-                                />
+                                </React.Fragment>
                             );
                         })}
                     </div>

@@ -160,10 +160,10 @@ export interface WithCheckoutProps {
 
 class Checkout extends Component<
     CheckoutProps &
-        WithCheckoutProps &
-        WithLanguageProps &
-        AnalyticsContextProps &
-        ExtensionContextProps,
+    WithCheckoutProps &
+    WithLanguageProps &
+    AnalyticsContextProps &
+    ExtensionContextProps,
     CheckoutState
 > {
     state: CheckoutState = {
@@ -320,8 +320,24 @@ class Checkout extends Component<
             }
         }
 
+        // EJEMPLO DE BANNER DE PRUEBA VISUAL
+         const pruebaBanner = (
+            <div style={{
+                background: '#ff8282ff',
+                padding: '20px',
+                fontWeight: 'bold',
+                fontSize: '18px',
+                color: '#333',
+                textAlign: 'center',
+                marginBottom: '20px'
+            }}>
+                CHECKOUT DE PRUEBA
+            </div>
+        );
+
         return (
             <div className={classNames('remove-checkout-step-numbers', { 'is-embedded': isEmbedded() })} data-test="checkout-page-container" id="checkout-page-container">
+                {pruebaBanner}
                 <div className="layout optimizedCheckout-contentPrimary">
                     {this.renderContent()}
                 </div>
@@ -457,7 +473,7 @@ class Checkout extends Component<
         const setIsMultishippingMode = (value: boolean) => {
             this.setState({ isMultiShippingMode: value });
         }
-
+        
         return (
             <CheckoutStep
                 {...step}

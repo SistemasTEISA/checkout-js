@@ -41,7 +41,7 @@
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "MEASURE_SPEED=false webpack --mode development --watch"
+        "command": "cross-env MEASURE_SPEED=false webpack --mode development --watch"
       },
       "dependsOn": [
         {
