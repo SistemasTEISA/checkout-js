@@ -163,7 +163,7 @@ class AddressForm extends Component<AddressFormProps & WithLanguageProps> {
                         className="checkout-address"
                         ref={this.containerRef as RefObject<HTMLDivElement>}
                     >
-                        {formFields.map((field) => {
+                        {formFields.filter(field => field.name !== "address2" && field.name !== "shippingAddress.address2").map((field) => {
                             const addressFieldName = field.name;
                             const translatedPlaceholderId = PLACEHOLDER[addressFieldName];
 
