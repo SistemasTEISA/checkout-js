@@ -156,8 +156,8 @@ export interface WithCheckoutProps {
     loadCheckout(id: string, options?: RequestOptions<CheckoutParams>): Promise<CheckoutSelectors>;
     loadPaymentMethodByIds(methodIds: string[]): Promise<CheckoutSelectors>;
     subscribeToConsignments(subscriber: (state: CheckoutSelectors) => void): () => void;
-    applyCoupon(code: string): Promise<CheckoutSelectors>;
-    removeCoupon(code: string): Promise<CheckoutSelectors>;
+    applyCoupon(couponCode: string): Promise<CheckoutSelectors>;
+    removeCoupon(couponCode: string): Promise<CheckoutSelectors>;
 }
 
 class Checkout extends Component<

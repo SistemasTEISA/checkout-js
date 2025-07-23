@@ -5,8 +5,13 @@ import { CheckoutContextProps } from '@bigcommerce/checkout/payment-integration-
 
 import { EMPTY_ARRAY, isExperimentEnabled } from '../common/utility';
 
-import { WithCheckoutProps } from './Checkout';
+import { WithCheckoutProps as BaseWithCheckoutProps } from './Checkout';
 import getCheckoutStepStatuses from './getCheckoutStepStatuses';
+
+export interface WithCheckoutProps extends BaseWithCheckoutProps {
+    applyCoupon(couponCode: string): Promise<any>;
+    removeCoupon(couponCode: string): Promise<any>;
+}
 
 export default function mapToCheckoutProps({
     checkoutService,
