@@ -97,12 +97,12 @@ class AddressForm extends Component<AddressFormProps & WithLanguageProps> {
         memoize((name) => (value) => {
             this.syncNonFormikValue(name, value);
 
-            //---------------------------------------------------- CODIGO MODIFICADO --------------------------------------------------------------------------------
+    //---------------------------------------------------- CODIGO MODIFICADO --------------------------------------------------------------------------------
             if (name === 'postalCode' && typeof value === 'string' && value.length === 5) {
                 this.buscarColonias(value);
                 this.setState({ postalCodeValue: value });
             }
-            //-------------------------------------------------------------------------------------------------------------------------------------------------------
+    //-------------------------------------------------------------------------------------------------------------------------------------------------------
         });
 
     componentDidMount(): void {
@@ -116,26 +116,25 @@ class AddressForm extends Component<AddressFormProps & WithLanguageProps> {
 
     //---------------------------------------------------- CODIGO MODIFICADO --------------------------------------------------------------------------------
     private buscarColonias = (cp: string) => {
-    const data = cpData[cp];
-    if (data) {
-        this.setState({
-            colonias: data.colonias || [],
-            municipio: data.municipio || '',
-            estado: data.estado || '',
-        });
+        const data = cpData[cp];
+        if (data) {
+            this.setState({
+                colonias: data.colonias || [],
+                municipio: data.municipio || '',
+                estado: data.estado || '',
+            });
 
-        // Rellena los campos del formulario nativos de BC
-        if (this.props.setFieldValue) {
-            this.props.setFieldValue('city', data.municipio || '');
+            if (this.props.setFieldValue) {
+                this.props.setFieldValue('city', data.municipio || '');
+            }
+            if (this.props.onChange) {
+                this.props.onChange('city', data.municipio || '');
+                console.log(this.state.coloniaSeleccionada);
+            }
+        } else {
+            this.setState({ colonias: [], municipio: '', estado: '' });
         }
-        if (this.props.onChange) {
-            this.props.onChange('city', data.municipio || '');
-            console.log(this.state.coloniaSeleccionada);
-        }
-    } else {
-        this.setState({ colonias: [], municipio: '', estado: '' });
-    }
-};
+    };
 
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -197,7 +196,6 @@ class AddressForm extends Component<AddressFormProps & WithLanguageProps> {
                                         )}`}
                                         field={field}
                                         inputId={getAddressFormFieldInputId(addressFieldName)}
-                                        // stateOrProvince can sometimes be a dropdown or input, so relying on id is not sufficient
                                         isFloatingLabelEnabled={isFloatingLabelEnabled}
                                         key={`${field.id}-${field.name}`}
                                         label={
@@ -264,24 +262,22 @@ class AddressForm extends Component<AddressFormProps & WithLanguageProps> {
                                         </div>
                                     )}
 
-                                    {field.name === "postalCode" &&
-                                        this.state.coloniaSeleccionada === "NO_ENCONTRO" && (() => {
-                                        const address2Field = formFields.find(
-                                            f => f.name === "address2" || f.name === "shippingAddress.address2"
-                                        );
+                                    {field.name === "postalCode" && this.state.coloniaSeleccionada === "NO_ENCONTRO" && (() => {
+                                        const address2Field = formFields.find( f => f.name === "address2" || f.name === "shippingAddress.address2");
+
                                         return address2Field && (
                                             <DynamicFormField
-                                            autocomplete={AUTOCOMPLETE[address2Field.name]}
-                                            extraClass={`dynamic-form-field--${getAddressFormFieldLegacyName(address2Field.name)}`}
-                                            field={address2Field}
-                                            inputId={getAddressFormFieldInputId(address2Field.name)}
-                                            isFloatingLabelEnabled={isFloatingLabelEnabled}
-                                            key={address2Field.id}
-                                            label={<TranslatedString id={LABEL[address2Field.name]} />}
-                                            newFontStyle={newFontStyle}
-                                            onChange={this.handleDynamicFormFieldChange(address2Field.name)}
-                                            parentFieldName={fieldName}
-                                            placeholder={this.getPlaceholderValue(address2Field, PLACEHOLDER[address2Field.name])}
+                                                autocomplete={AUTOCOMPLETE[address2Field.name]}
+                                                extraClass={`dynamic-form-field--${getAddressFormFieldLegacyName(address2Field.name)}`}
+                                                field={address2Field}
+                                                inputId={getAddressFormFieldInputId(address2Field.name)}
+                                                isFloatingLabelEnabled={isFloatingLabelEnabled}
+                                                key={address2Field.id}
+                                                label={<TranslatedString id={LABEL[address2Field.name]} />}
+                                                newFontStyle={newFontStyle}
+                                                onChange={this.handleDynamicFormFieldChange(address2Field.name)}
+                                                parentFieldName={fieldName}
+                                                placeholder={this.getPlaceholderValue(address2Field, PLACEHOLDER[address2Field.name])}
                                             />
                                         );
                                     })()}
@@ -311,21 +307,14 @@ class AddressForm extends Component<AddressFormProps & WithLanguageProps> {
         return translatedPlaceholderId && language.translate(translatedPlaceholderId);
     }
 
-    private handleAutocompleteChange: (value: string, isOpen: boolean) => void = (
-        value,
-        isOpen,
-    ) => {
+    private handleAutocompleteChange: (value: string, isOpen: boolean) => void = ( value, isOpen,) => {
         if (!isOpen) {
             this.syncNonFormikValue(AUTOCOMPLETE_FIELD_NAME, value);
         }
     };
 
-    private handleAutocompleteSelect: (
-        place: google.maps.places.PlaceResult,
-        item: AutocompleteItem,
-    ) => void = (place, { value: autocompleteValue }) => {
+    private handleAutocompleteSelect: ( place: google.maps.places.PlaceResult, item: AutocompleteItem,) => void = (place, { value: autocompleteValue }) => {
         const { countries, setFieldValue = noop, onChange = noop } = this.props;
-
         const address = mapToAddress(place, countries);
 
         forIn(address, (value, fieldName) => {
@@ -346,15 +335,9 @@ class AddressForm extends Component<AddressFormProps & WithLanguageProps> {
 
     // because autocomplete state is controlled by Downshift, we need to manually keep formik
     // value in sync when autocomplete value changes
-    private syncNonFormikValue: (fieldName: string, value: string | string[]) => void = (
-        fieldName,
-        value,
-    ) => {
+    private syncNonFormikValue: (fieldName: string, value: string | string[]) => void = (fieldName, value,) => {
         const { formFields, setFieldValue = noop, onChange = noop } = this.props;
-
-        const dateFormFieldNames = formFields
-            .filter((field) => field.custom && field.fieldType === DynamicFormFieldType.date)
-            .map((field) => field.name);
+        const dateFormFieldNames = formFields.filter((field) => field.custom && field.fieldType === DynamicFormFieldType.date).map((field) => field.name);
 
         if (fieldName === AUTOCOMPLETE_FIELD_NAME || dateFormFieldNames.includes(fieldName)) {
             setFieldValue(fieldName, value);

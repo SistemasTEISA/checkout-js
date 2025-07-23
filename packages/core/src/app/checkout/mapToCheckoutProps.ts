@@ -66,6 +66,8 @@ export default function mapToCheckoutProps({
             checkoutService,
             checkoutState,
         }),
+        applyCoupon: checkoutService.applyCoupon,
+        removeCoupon: checkoutService.removeCoupon,
         steps: data.getCheckout() ? getCheckoutStepStatuses(checkoutState) : EMPTY_ARRAY,
     };
 }

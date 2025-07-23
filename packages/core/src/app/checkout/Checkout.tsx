@@ -156,6 +156,8 @@ export interface WithCheckoutProps {
     loadCheckout(id: string, options?: RequestOptions<CheckoutParams>): Promise<CheckoutSelectors>;
     loadPaymentMethodByIds(methodIds: string[]): Promise<CheckoutSelectors>;
     subscribeToConsignments(subscriber: (state: CheckoutSelectors) => void): () => void;
+    applyCoupon(code: string): Promise<CheckoutSelectors>;
+    removeCoupon(code: string): Promise<CheckoutSelectors>;
 }
 
 class Checkout extends Component<
@@ -665,6 +667,27 @@ class Checkout extends Component<
     private handleConsignmentsUpdated: (state: CheckoutSelectors) => void = ({ data }) => {
         const { hasSelectedShippingOptions: prevHasSelectedShippingOptions, activeStepType, defaultStepType } =
             this.state;
+
+        const consignments = data.getConsignments() || [];
+
+        // Detecta si escogieron “pick up”
+        const isPickup = consignments.some(c =>
+            c.selectedShippingOption?.description === 'pickup'
+        );
+
+        try {
+            if (isPickup) {
+                // Llama a la función, NO la chequees como un booleano
+                this.props.applyCoupon('EGTEISA');
+            } else {
+                this.props.removeCoupon('EGTEISA');
+            }
+        } catch (error) {
+            this.handleUnhandledError(error as Error);
+        }
+
+        // Actualiza tu estado normalmente
+        this.setState({ hasSelectedShippingOptions: isPickup });
 
         const { steps } = this.props;
 
