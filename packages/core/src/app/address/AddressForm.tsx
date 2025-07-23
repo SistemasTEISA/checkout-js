@@ -130,6 +130,7 @@ class AddressForm extends Component<AddressFormProps & WithLanguageProps> {
         }
         if (this.props.onChange) {
             this.props.onChange('city', data.municipio || '');
+            console.log(this.state.coloniaSeleccionada);
         }
     } else {
         this.setState({ colonias: [], municipio: '', estado: '' });
@@ -159,10 +160,8 @@ class AddressForm extends Component<AddressFormProps & WithLanguageProps> {
         return (
             <>
                 <Fieldset>
-                    <div
-                        className="checkout-address"
-                        ref={this.containerRef as RefObject<HTMLDivElement>}
-                    >
+                    <div className="checkout-address" ref={this.containerRef as RefObject<HTMLDivElement>} >
+
                         {formFields.filter(field => field.name !== "address2" && field.name !== "shippingAddress.address2").map((field) => {
                             const addressFieldName = field.name;
                             const translatedPlaceholderId = PLACEHOLDER[addressFieldName];
@@ -233,16 +232,26 @@ class AddressForm extends Component<AddressFormProps & WithLanguageProps> {
                                                     value={this.state.coloniaSeleccionada}
                                                     onChange={e => {
                                                         this.setState({ coloniaSeleccionada: e.target.value });
-                                                        if (this.props.setFieldValue) {
-                                                            this.props.setFieldValue('address2', e.target.value);
-                                                        }
-                                                        if (this.props.onChange) {
-                                                            this.props.onChange('address2', e.target.value);
+                                                        if( e.target.value !== "NO_ENCONTRO") {
+                                                            if (this.props.setFieldValue) {
+                                                                this.props.setFieldValue('address2', e.target.value);
+                                                            }
+                                                            if (this.props.onChange) {
+                                                                this.props.onChange('address2', e.target.value);
+                                                            }
+                                                        }else{
+                                                            if (this.props.setFieldValue) {
+                                                                this.props.setFieldValue('address2', '');
+                                                            }
+                                                            if (this.props.onChange) {
+                                                                this.props.onChange('address2', '');
+                                                            }
                                                         }
                                                     }}
                                                     required
                                                 >
                                                     <option value="">Selecciona una colonia</option>
+                                                    <option value="NO_ENCONTRO">MI COLONIA NO ESTÁ EN EL LISTADO</option>
                                                     {this.state.colonias.map((colonia, idx) => (
                                                         <option key={idx} value={colonia}>{colonia}</option>
                                                     ))}
@@ -250,11 +259,32 @@ class AddressForm extends Component<AddressFormProps & WithLanguageProps> {
                                                 <label className="floating-label form-label optimizedCheckout-form-label floating-form-field-label-label" 
                                                     htmlFor="colonia">
                                                     Colonia
-                                                    {/* <span className="is-required">*</span> */}
                                                 </label>
                                             </div>
                                         </div>
                                     )}
+
+                                    {field.name === "postalCode" &&
+                                        this.state.coloniaSeleccionada === "NO_ENCONTRO" && (() => {
+                                        const address2Field = formFields.find(
+                                            f => f.name === "address2" || f.name === "shippingAddress.address2"
+                                        );
+                                        return address2Field && (
+                                            <DynamicFormField
+                                            autocomplete={AUTOCOMPLETE[address2Field.name]}
+                                            extraClass={`dynamic-form-field--${getAddressFormFieldLegacyName(address2Field.name)}`}
+                                            field={address2Field}
+                                            inputId={getAddressFormFieldInputId(address2Field.name)}
+                                            isFloatingLabelEnabled={isFloatingLabelEnabled}
+                                            key={address2Field.id}
+                                            label={<TranslatedString id={LABEL[address2Field.name]} />}
+                                            newFontStyle={newFontStyle}
+                                            onChange={this.handleDynamicFormFieldChange(address2Field.name)}
+                                            parentFieldName={fieldName}
+                                            placeholder={this.getPlaceholderValue(address2Field, PLACEHOLDER[address2Field.name])}
+                                            />
+                                        );
+                                    })()}
                                 </React.Fragment>
                             );
                         })}
