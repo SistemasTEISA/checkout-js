@@ -127,11 +127,9 @@ class AddressForm extends Component<AddressFormProps & WithLanguageProps> {
         // Rellena los campos del formulario nativos de BC
         if (this.props.setFieldValue) {
             this.props.setFieldValue('city', data.municipio || '');
-            this.props.setFieldValue('stateOrProvince', data.estado || '');
         }
         if (this.props.onChange) {
             this.props.onChange('city', data.municipio || '');
-            this.props.onChange('stateOrProvince', data.estado || '');
         }
     } else {
         this.setState({ colonias: [], municipio: '', estado: '' });
