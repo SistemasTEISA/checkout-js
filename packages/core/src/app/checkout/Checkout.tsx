@@ -677,14 +677,17 @@ class Checkout extends Component<
 
         try {
             if (isPickup) {
-                // Llama a la función, NO la chequees como un booleano
-                this.props.applyCoupon('EGTEISA');
+                this.props.applyCoupon("EGTEISA");
             } else {
-                this.props.removeCoupon('EGTEISA');
+                this.props.removeCoupon("EGTEISA");
             }
-        } catch (error) {
-            this.handleUnhandledError(error as Error);
+
+            
+            this.props.loadCheckout(this.props.checkoutId);
+        } catch (error: any) {
+            console.warn('No se aplicó el cupón:', error);
         }
+
 
         // Actualiza tu estado normalmente
         this.setState({ hasSelectedShippingOptions: isPickup });
