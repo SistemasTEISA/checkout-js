@@ -8,15 +8,14 @@ import { EMPTY_ARRAY, isExperimentEnabled } from '../common/utility';
 import { WithCheckoutProps as BaseWithCheckoutProps } from './Checkout';
 import getCheckoutStepStatuses from './getCheckoutStepStatuses';
 
+//--------------------------------------------------------------------------------------------------------------------------------------------------
 export interface WithCheckoutProps extends BaseWithCheckoutProps {
     applyCoupon(couponCode: string): Promise<any>;
     removeCoupon(couponCode: string): Promise<any>;
 }
+//--------------------------------------------------------------------------------------------------------------------------------------------------
 
-export default function mapToCheckoutProps({
-    checkoutService,
-    checkoutState,
-}: CheckoutContextProps): WithCheckoutProps {
+export default function mapToCheckoutProps({ checkoutService, checkoutState,}: CheckoutContextProps): WithCheckoutProps {
     const { data, errors, statuses } = checkoutState;
     const { promotions = EMPTY_ARRAY } = data.getCheckout() || {};
     const submitOrderError = errors.getSubmitOrderError() as CustomError;

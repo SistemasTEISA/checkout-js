@@ -156,8 +156,10 @@ export interface WithCheckoutProps {
     loadCheckout(id: string, options?: RequestOptions<CheckoutParams>): Promise<CheckoutSelectors>;
     loadPaymentMethodByIds(methodIds: string[]): Promise<CheckoutSelectors>;
     subscribeToConsignments(subscriber: (state: CheckoutSelectors) => void): () => void;
+//--------------------------------------------------------------------------------------------------------------------------------------------------    
     applyCoupon(couponCode: string): Promise<CheckoutSelectors>;
     removeCoupon(couponCode: string): Promise<CheckoutSelectors>;
+//--------------------------------------------------------------------------------------------------------------------------------------------------    
 }
 
 class Checkout extends Component<
@@ -656,7 +658,6 @@ class Checkout extends Component<
 
     private checkEmbeddedSupport: (methodIds: string[]) => boolean = (methodIds) => {
         const { embeddedSupport } = this.props;
-
         return embeddedSupport.isSupported(...methodIds);
     };
 
@@ -670,27 +671,34 @@ class Checkout extends Component<
 
         const consignments = data.getConsignments() || [];
 
-        // Detecta si escogieron “pick up”
-        const isPickup = consignments.some(c =>
-            c.selectedShippingOption?.description === 'pickup'
+    //--------------------------------------------------------------------------------------------------------------------------------------------------------    
+        
+        // Busca bien el método correcto:
+        const pickupSelected = consignments.some(consignment =>
+            consignment.selectedShippingOption &&
+            (
+            consignment.selectedShippingOption.type === 'pickup' ||
+            consignment.selectedShippingOption.description?.toLowerCase().includes('pick up')
+            )
         );
 
-        try {
-            if (isPickup) {
-                this.props.applyCoupon("EGTEISA");
-            } else {
-                this.props.removeCoupon("EGTEISA");
+        if (pickupSelected) {
+            try {
+                this.props.applyCoupon('EGTEISA');
+            } catch (e) {
+                console.error('No se pudo aplicar pickup-coupon', e);
             }
-
-            
-            this.props.loadCheckout(this.props.checkoutId);
-        } catch (error: any) {
-            console.warn('No se aplicó el cupón:', error);
         }
 
+        if (!pickupSelected) {
+            try {
+                this.props.removeCoupon('EGTEISA');
+            } catch (e) {
+                console.error('No se pudo quitar pickup-coupon', e);
+            }
+        }
 
-        // Actualiza tu estado normalmente
-        this.setState({ hasSelectedShippingOptions: isPickup });
+    //--------------------------------------------------------------------------------------------------------------------------------------------------------    
 
         const { steps } = this.props;
 
@@ -725,7 +733,6 @@ class Checkout extends Component<
 
     private handleExpanded: (type: CheckoutStepType) => void = (type) => {
         const { analyticsTracker } = this.props;
-
         analyticsTracker.trackStepViewed(type);
     };
 
@@ -739,7 +746,6 @@ class Checkout extends Component<
 
     private handleError: (error: Error) => void = (error) => {
         const { errorLogger } = this.props;
-
         errorLogger.log(error);
 
         if (this.embeddedMessenger) {
@@ -789,9 +795,7 @@ class Checkout extends Component<
         this.navigateToStep(CheckoutStepType.Customer);
     };
 
-    private handleShippingNextStep: (isBillingSameAsShipping: boolean) => void = (
-        isBillingSameAsShipping,
-    ) => {
+    private handleShippingNextStep: (isBillingSameAsShipping: boolean) => void = (isBillingSameAsShipping,) => {
         this.setState({ isBillingSameAsShipping });
 
         if (isBillingSameAsShipping) {
@@ -816,7 +820,6 @@ class Checkout extends Component<
             if (window.top) {
                 window.top.location.replace(createAccountUrl);
             }
-
             return;
         }
 
@@ -826,13 +829,11 @@ class Checkout extends Component<
 
     private handleBeforeExit: () => void = () => {
         const { analyticsTracker } = this.props;
-
         analyticsTracker.exitCheckout();
     }
 
     private handleWalletButtonClick: (methodName: string) => void = (methodName) => {
         const { analyticsTracker } = this.props;
-
         analyticsTracker.walletButtonClick(methodName);
     }
 }
