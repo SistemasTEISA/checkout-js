@@ -5,13 +5,17 @@ import { CheckoutContextProps } from '@bigcommerce/checkout/payment-integration-
 
 import { EMPTY_ARRAY, isExperimentEnabled } from '../common/utility';
 
-import { WithCheckoutProps } from './Checkout';
+import { WithCheckoutProps as BaseWithCheckoutProps } from './Checkout';
 import getCheckoutStepStatuses from './getCheckoutStepStatuses';
 
-export default function mapToCheckoutProps({
-    checkoutService,
-    checkoutState,
-}: CheckoutContextProps): WithCheckoutProps {
+//--------------------------------------------------------------------------------------------------------------------------------------------------
+export interface WithCheckoutProps extends BaseWithCheckoutProps {
+    applyCoupon(couponCode: string): Promise<any>;
+    removeCoupon(couponCode: string): Promise<any>;
+}
+//--------------------------------------------------------------------------------------------------------------------------------------------------
+
+export default function mapToCheckoutProps({ checkoutService, checkoutState,}: CheckoutContextProps): WithCheckoutProps {
     const { data, errors, statuses } = checkoutState;
     const { promotions = EMPTY_ARRAY } = data.getCheckout() || {};
     const submitOrderError = errors.getSubmitOrderError() as CustomError;
@@ -66,6 +70,8 @@ export default function mapToCheckoutProps({
             checkoutService,
             checkoutState,
         }),
+        applyCoupon: checkoutService.applyCoupon,
+        removeCoupon: checkoutService.removeCoupon,
         steps: data.getCheckout() ? getCheckoutStepStatuses(checkoutState) : EMPTY_ARRAY,
     };
 }
