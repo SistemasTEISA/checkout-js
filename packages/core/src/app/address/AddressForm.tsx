@@ -93,20 +93,29 @@ class AddressForm extends Component<AddressFormProps & WithLanguageProps> {
     };
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
 
+    private onlyDigits5 = (v: string) => (v || '').replace(/\D/g, '').slice(0, 5);
+
     private handleDynamicFormFieldChange: (name: string) => (value: string | string[]) => void =
         memoize((name) => (value) => {
             this.syncNonFormikValue(name, value);
 
             //---------------------------------------------------- CODIGO MODIFICADO --------------------------------------------------------------------------------
-            if (name === 'postalCode' && typeof value === 'string' && value.length === 5) {
-                this.buscarColonias(value);
-                this.setState({ postalCodeValue: value });
+            if (name === 'postalCode' && typeof value === 'string') {
+                const cp = this.onlyDigits5(value);
+                if (cp.length === 5 && cp !== this.state.postalCodeValue) {
+                    this.buscarColonias(cp);
+                    this.setState({ postalCodeValue: cp });
+                }
             }
             //-------------------------------------------------------------------------------------------------------------------------------------------------------
         });
 
     componentDidMount(): void {
         const { current } = this.containerRef;
+
+        this.firePostalIfReady();
+        setTimeout(this.firePostalIfReady, 250);
+        setTimeout(this.firePostalIfReady, 1000);
 
         if (current) {
             this.nextElement = current.querySelector<HTMLElement>('[autocomplete="address-line2"]');
@@ -115,26 +124,58 @@ class AddressForm extends Component<AddressFormProps & WithLanguageProps> {
 
 
     //---------------------------------------------------- CODIGO MODIFICADO --------------------------------------------------------------------------------
+    private enforceCityFromCP = (municipio: string) => {
+        const city = municipio || '';
+        this.props.setFieldValue?.('city', city);
+        this.props.onChange?.('city', city);
+        // Re-aplica en el siguiente tick por si Formik/React reinyectan valores del carrito
+        setTimeout(() => {
+            this.props.setFieldValue?.('city', city);
+            this.props.onChange?.('city', city);
+        }, 0);
+    };
+    
     private buscarColonias = (cp: string) => {
-    const data = cpData[cp];
-    if (data) {
-        this.setState({
+        const data = cpData[cp];
+        if (data) {
+            this.setState({
             colonias: data.colonias || [],
+            coloniaSeleccionada: '',
             municipio: data.municipio || '',
             estado: data.estado || '',
-        });
+            });
 
-        // Rellena los campos del formulario nativos de BC
-        if (this.props.setFieldValue) {
-            this.props.setFieldValue('city', data.municipio || '');
+            this.enforceCityFromCP(data.municipio || '');
+            this.props.setFieldValue?.('address2', '');
+            this.props.onChange?.('address2', '');
+        } else {
+            this.setState({ colonias: [], coloniaSeleccionada: '', municipio: '', estado: '' });
+            this.props.setFieldValue?.('address2', '');
+            this.props.onChange?.('address2', '');
         }
-        if (this.props.onChange) {
-            this.props.onChange('city', data.municipio || '');
-            console.log(this.state.coloniaSeleccionada);
-        }
-    } else {
-        this.setState({ colonias: [], municipio: '', estado: '' });
-    }
+    };
+
+
+// Encuentra el input real del CP (ajusta si usas billing)
+private findPostalInput = (): HTMLInputElement | null => {
+  return document.querySelector(
+    'input[name="shippingAddress.postalCode"], input[name="postalCode"], input[name$=".postalCode"], input[id*="postalCode"], input[data-test="postalCode"]'
+  );
+};
+
+// Llama tu misma lógica si el CP ya está a 5 dígitos
+private firePostalIfReady = (): void => {
+  const el = this.findPostalInput();
+  if (!el) return;
+
+  const cp = this.onlyDigits5(el.value || '');
+  if (cp.length === 5 && cp !== this.state.postalCodeValue) {
+    this.props.setFieldValue?.('city', '');
+    this.props.onChange?.('city', '');
+
+    this.buscarColonias(cp);
+    this.setState({ postalCodeValue: cp });
+  }
 };
 
     //-------------------------------------------------------------------------------------------------------------------------------------------------------
