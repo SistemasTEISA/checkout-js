@@ -327,7 +327,7 @@ class Checkout extends Component<
         // EJEMPLO DE BANNER DE PRUEBA VISUAL
          const pruebaBanner = (
             <div style={{
-                background: '#ff8282ff',
+                background: '#8cff82ff',
                 padding: '20px',
                 fontWeight: 'bold',
                 fontSize: '18px',
@@ -335,7 +335,7 @@ class Checkout extends Component<
                 textAlign: 'center',
                 marginBottom: '20px'
             }}>
-                CHECKOUT DE PRUEBA
+                CHECKOUT DE PRUEBA 2
             </div>
         );
 
