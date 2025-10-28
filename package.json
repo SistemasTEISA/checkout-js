@@ -168,7 +168,7 @@
     "sass": "^1.60.0",
     "sass-loader": "^13.2.1",
     "semver": "^6.3.1",
-    "setup-polly-jest": "^0.10.0",
+    "setup-polly-jest": "^0.11.0",
     "source-map-loader": "^0.2.4",
     "speed-measure-webpack-plugin": "^1.5.0",
     "standard-version": "^9.5.0",
